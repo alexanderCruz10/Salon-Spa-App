@@ -94,8 +94,8 @@ function LoginPage() {
               console.log('Navigating to owner dashboard...');
               navigate('/owner-dashboard');
             } else {
-              console.log('Navigating to user dashboard...');
-              navigate('/user-dashboard');
+              console.log('Navigating to user home page...');
+              navigate('/home');
             }
           } else {
             console.error('Auth check failed after login');

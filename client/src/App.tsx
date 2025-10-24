@@ -4,6 +4,8 @@ import LoginPage from './pages/public/login'
 import RegisterPage from './pages/public/register'
 import OwnerDashboardPage from './pages/private/owner/dashboard/page'
 import UserDashboardPage from './pages/private/user/dashboard'
+import UserHomePage from './pages/private/owner/homepage/userhomepage.tsx'
+import AboutPage from './pages/private/user/aboutpage/aboutpage.tsx'
 import './index.css'
 import ProtectedRoute from './ProtectedRoutes/ProtectedRoute'
 import useAuth from './lib/useAuth.ts'; // Keep this for background auth checking
@@ -27,7 +29,18 @@ function App() {
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
 
+
         {/* Private Routes */}
+        <Route path='/home' element={
+          <ProtectedRoute isAuthenticated={isAuthenticated} allowedRoles={['user']} userRole={userRole}>
+            <UserHomePage />
+          </ProtectedRoute>
+        } />
+        <Route path='/about' element={
+          <ProtectedRoute isAuthenticated={isAuthenticated} allowedRoles={['user']} userRole={userRole}>
+            <AboutPage />
+          </ProtectedRoute>
+        } />
         <Route path="/owner-dashboard" element={
           <ProtectedRoute isAuthenticated={isAuthenticated} allowedRoles={['owner']} userRole={userRole}>
             <OwnerDashboardPage />

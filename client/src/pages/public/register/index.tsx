@@ -73,7 +73,7 @@ function RegisterPage() {
       if (response.data.role === 'owner') {
         navigate('/owner-dashboard');
       } else {
-        navigate('/user-dashboard');
+        navigate('/home');
       }
       
     } catch (error) {
