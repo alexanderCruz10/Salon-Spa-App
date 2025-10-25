@@ -1,4 +1,6 @@
 // API configuration and utility functions
+import type { CreateSalonDTO, UpdateSalonDTO } from '@/types/salon';
+
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
 // Generic API request function
@@ -67,6 +69,43 @@ export const authAPI = {
 
   getProfile: () =>
     apiRequest('/api/auth/me', {
+      method: 'GET',
+    }),
+};
+
+// Salon API calls
+export const salonAPI = {
+  create: (salonData: CreateSalonDTO) =>
+    apiRequest('/api/salons', {
+      method: 'POST',
+      body: JSON.stringify(salonData),
+    }),
+
+  getAll: (params?: { city?: string }) => {
+    const queryParams = params?.city ? `?city=${encodeURIComponent(params.city)}` : '';
+    return apiRequest(`/api/salons${queryParams}`, {
+      method: 'GET',
+    });
+  },
+
+  getById: (id: string) =>
+    apiRequest(`/api/salons/${id}`, {
+      method: 'GET',
+    }),
+
+  update: (id: string, salonData: UpdateSalonDTO) =>
+    apiRequest(`/api/salons/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(salonData),
+    }),
+
+  delete: (id: string) =>
+    apiRequest(`/api/salons/${id}`, {
+      method: 'DELETE',
+    }),
+
+  getOwnerSalons: () =>
+    apiRequest('/api/salons/owner/my-salons', {
       method: 'GET',
     }),
 };
