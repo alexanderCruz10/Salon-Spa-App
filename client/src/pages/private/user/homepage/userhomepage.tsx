@@ -37,6 +37,17 @@ function UserHomePage() {
     }
   };
 
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setSearchCity(value);
+    
+    // Clear results when input is empty
+    if (value.trim() === '') {
+      setSearched(false);
+      setSalons([]);
+    }
+  };
+
   const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
       handleSearch();
@@ -68,7 +79,7 @@ function UserHomePage() {
               type="text"
               placeholder="Enter city name..."
               value={searchCity}
-              onChange={(e) => setSearchCity(e.target.value)}
+              onChange={handleInputChange}
               onKeyPress={handleKeyPress}
               className="p-3 w-full sm:w-2/3 md:w-1/2 rounded border border-gray-300 text-gray-900"
             />
@@ -127,12 +138,12 @@ function UserHomePage() {
                       <div className="mb-4">
                         <p className="text-xs font-semibold text-green-800 mb-2">Services:</p>
                         <div className="flex flex-wrap gap-1">
-                          {salon.services.slice(0, 3).map((service: string, idx: number) => (
+                          {salon.services.slice(0, 3).map((service: any, idx: number) => (
                             <span
                               key={idx}
                               className="bg-green-600 text-white px-2 py-1 rounded-full text-xs"
                             >
-                              {service}
+                              {typeof service === 'string' ? service : service.name}
                             </span>
                           ))}
                           {salon.services.length > 3 && (

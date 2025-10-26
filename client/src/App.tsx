@@ -7,11 +7,15 @@ import UserDashboardPage from './pages/private/user/dashboard'
 import UserHomePage from './pages/private/user/homepage/userhomepage.tsx'
 import AboutPage from './pages/private/user/aboutpage/aboutpage.tsx'
 import SalonsPage from './pages/private/user/salons/index.tsx'
+import SalonDetail from './pages/public/salons/SalonDetail';
+import BookingPage from './pages/private/user/bookingpage/bookingpage';
+import MyBookings from './pages/private/user/mybookings/mybookings';
 import './index.css'
 import ProtectedRoute from './ProtectedRoutes/ProtectedRoute'
 import useAuth from './lib/useAuth.ts'; // Keep this for background auth checking
 import AddSalon from './pages/private/owner/salon/addsalson.tsx'
 import MySalon from './pages/private/owner/salon/mysalon.tsx'
+import ShowAppointment from './pages/private/owner/showapointment/showappointment.tsx'
 import { useUserStore } from './store/userStore';
 
 
@@ -47,6 +51,23 @@ function App() {
           </ProtectedRoute>
         } />
 
+        {/* Salon detail - public */}
+        <Route path="/salons/:id" element={<SalonDetail />} />
+
+        {/* Booking - protected for users */}
+        <Route path='/book/:id' element={
+          <ProtectedRoute isAuthenticated={isAuthenticated} allowedRoles={['user']} userRole={userRole}>
+            <BookingPage />
+          </ProtectedRoute>
+        } />
+
+        {/* My Bookings - protected for users */}
+        <Route path='/my-bookings' element={
+          <ProtectedRoute isAuthenticated={isAuthenticated} allowedRoles={['user']} userRole={userRole}>
+            <MyBookings />
+          </ProtectedRoute>
+        } />
+
         <Route path='/about' element={
           <ProtectedRoute isAuthenticated={isAuthenticated} allowedRoles={['user']} userRole={userRole}>
             <AboutPage />
@@ -73,6 +94,11 @@ function App() {
         <Route path='/owner/salons' element={
           <ProtectedRoute isAuthenticated={isAuthenticated} allowedRoles={['owner']} userRole={userRole}>
             <MySalon />
+          </ProtectedRoute>
+        } />
+        <Route path='/owner/appointments' element={
+          <ProtectedRoute isAuthenticated={isAuthenticated} allowedRoles={['owner']} userRole={userRole}>
+            <ShowAppointment />
           </ProtectedRoute>
         } />
        

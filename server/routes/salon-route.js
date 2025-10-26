@@ -292,7 +292,12 @@ router.put('/:id', verifyToken, async (req, res) => {
       );
     }
 
-    await salon.save();
+    // Skip validation if only updating isActive (for reactivating old salons with old service format)
+    const saveOptions = Object.keys(req.body).length === 1 && isActive !== undefined 
+      ? { validateBeforeSave: false } 
+      : {};
+    
+    await salon.save(saveOptions);
 
     res.json({
       success: true,
@@ -335,9 +340,12 @@ router.delete('/:id', verifyToken, async (req, res) => {
       });
     }
 
-    // Soft delete - just mark as inactive
-    salon.isActive = false;
-    await salon.save();
+    // Soft delete using update to bypass validation
+    await Salon.findByIdAndUpdate(
+      req.params.id,
+      { isActive: false },
+      { runValidators: false }
+    );
 
     // Or hard delete:
     // await Salon.findByIdAndDelete(req.params.id);

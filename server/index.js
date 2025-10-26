@@ -13,6 +13,7 @@ connectMongoDB();
 const userRoute = require('./routes/user-route');
 const authRoute = require('./routes/auth-route');
 const salonRoute = require('./routes/salon-route');
+const bookingRoute = require('./routes/booking-route');
 
 app.use(express.json()); //parser for JSON data
 app.use(cookieParser()); // Parse cookies
@@ -42,6 +43,7 @@ app.use(cors({
 app.use("/api/users", userRoute);
 app.use("/api/auth", authRoute);
 app.use("/api/salons", salonRoute);
+app.use("/api/bookings", bookingRoute);
 
 // Add a simple health check endpoint
 app.get('/api/health', (req, res) => {

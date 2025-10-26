@@ -110,4 +110,47 @@ export const salonAPI = {
     }),
 };
 
+// Booking API calls
+export const bookingAPI = {
+  create: (bookingData: {
+    salonId: string;
+    services: string[];
+    date: string;
+    time: string;
+    notes?: string;
+    totalAmount?: number;
+  }) =>
+    apiRequest('/api/bookings/create', {
+      method: 'POST',
+      body: JSON.stringify(bookingData),
+    }),
+
+  getMyBookings: () =>
+    apiRequest('/api/bookings/my-bookings', {
+      method: 'GET',
+    }),
+
+  getSalonBookings: (salonId: string) =>
+    apiRequest(`/api/bookings/salon/${salonId}`, {
+      method: 'GET',
+    }),
+
+  getById: (id: string) =>
+    apiRequest(`/api/bookings/${id}`, {
+      method: 'GET',
+    }),
+
+  updateStatus: (id: string, status: string, cancellationReason?: string) =>
+    apiRequest(`/api/bookings/${id}/status`, {
+      method: 'PUT',
+      body: JSON.stringify({ status, cancellationReason }),
+    }),
+
+  cancel: (id: string, cancellationReason?: string) =>
+    apiRequest(`/api/bookings/${id}/cancel`, {
+      method: 'PUT',
+      body: JSON.stringify({ cancellationReason }),
+    }),
+};
+
 export { API_URL };

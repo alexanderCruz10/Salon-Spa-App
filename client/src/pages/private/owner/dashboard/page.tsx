@@ -1,14 +1,60 @@
 import { useUserStore } from '@/store/userStore'
-import { authAPI } from '@/lib/api'
-import { Link, useNavigate } from 'react-router-dom'
+import { authAPI, salonAPI, bookingAPI } from '@/lib/api'
+import { Link, useNavigate, useLocation } from 'react-router-dom'
 import toast from 'react-hot-toast'
 import { useState, useEffect } from 'react'
+import type { Booking } from '@/types/booking'
 
 function OwnerDashboardPage() {
   const { user, clearUser } = useUserStore();
   const navigate = useNavigate();
+  const location = useLocation();
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [bookings, setBookings] = useState<Booking[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [totalSalons, setTotalSalons] = useState(0);
+
+  // Load data on mount and whenever we navigate to this page
+  useEffect(() => {
+    loadDashboardData();
+  }, [location.pathname]); // Re-run when route changes
+
+  const loadDashboardData = async () => {
+    try {
+      setLoading(true);
+      
+      // Get salons owned by this owner
+      const salonsRes = await salonAPI.getOwnerSalons();
+      const salonsData = salonsRes?.data ?? salonsRes ?? [];
+      setTotalSalons(Array.isArray(salonsData) ? salonsData.length : 0);
+
+      // For each salon, fetch bookings and merge
+      const allBookings: Booking[] = [];
+      if (Array.isArray(salonsData) && salonsData.length > 0) {
+        for (const s of salonsData) {
+          try {
+            const salonId = (s as { _id?: string; id?: string })._id || (s as { _id?: string; id?: string }).id;
+            if (!salonId) continue;
+            
+            const res = await bookingAPI.getSalonBookings(salonId);
+            const data = res?.data ?? res ?? [];
+            if (Array.isArray(data)) {
+              allBookings.push(...data);
+            }
+          } catch (err) {
+            console.error('Failed to load bookings for salon', s, err);
+          }
+        }
+      }
+
+      setBookings(allBookings);
+    } catch (err) {
+      console.error('Failed to load dashboard data', err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
     const handleScroll = () => {
@@ -170,7 +216,7 @@ function OwnerDashboardPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <h3 className="text-sm font-medium text-gray-600 mb-1">Total Salons</h3>
-                  <p className="text-4xl font-bold text-blue-600">0</p>
+                  <p className="text-4xl font-bold text-blue-600">{loading ? '...' : totalSalons}</p>
                   <p className="text-sm text-gray-500 mt-2">Active locations</p>
                 </div>
                 <div className="text-5xl">🏢</div>
@@ -180,7 +226,13 @@ function OwnerDashboardPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <h3 className="text-sm font-medium text-gray-600 mb-1">Appointments Today</h3>
-                  <p className="text-4xl font-bold text-green-600">0</p>
+                  <p className="text-4xl font-bold text-green-600">
+                    {loading ? '...' : bookings.filter(b => {
+                      const today = new Date().toDateString();
+                      const bookingDate = new Date(b.date).toDateString();
+                      return bookingDate === today && (b.status === 'pending' || b.status === 'confirmed');
+                    }).length}
+                  </p>
                   <p className="text-sm text-gray-500 mt-2">Scheduled bookings</p>
                 </div>
                 <div className="text-5xl">📅</div>
@@ -190,7 +242,15 @@ function OwnerDashboardPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <h3 className="text-sm font-medium text-gray-600 mb-1">Monthly Revenue</h3>
-                  <p className="text-4xl font-bold text-purple-600">$0</p>
+                  <p className="text-4xl font-bold text-purple-600">
+                    {loading ? '...' : `$${bookings.filter(b => {
+                      const now = new Date();
+                      const bookingDate = new Date(b.date);
+                      return bookingDate.getMonth() === now.getMonth() && 
+                             bookingDate.getFullYear() === now.getFullYear() &&
+                             b.status === 'completed';
+                    }).reduce((sum, b) => sum + (b.totalAmount || 0), 0).toFixed(2)}`}
+                  </p>
                   <p className="text-sm text-gray-500 mt-2">This month's earnings</p>
                 </div>
                 <div className="text-5xl">💰</div>
@@ -200,7 +260,9 @@ function OwnerDashboardPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <h3 className="text-sm font-medium text-gray-600 mb-1">Total Customers</h3>
-                  <p className="text-4xl font-bold text-pink-600">0</p>
+                  <p className="text-4xl font-bold text-pink-600">
+                    {loading ? '...' : new Set(bookings.map(b => b.userId)).size}
+                  </p>
                   <p className="text-sm text-gray-500 mt-2">Unique clients served</p>
                 </div>
                 <div className="text-5xl">👥</div>
@@ -212,22 +274,114 @@ function OwnerDashboardPage() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
             {/* Recent Activity */}
             <div className="bg-white rounded-lg shadow-xl p-6 md:p-8">
-              <h3 className="text-2xl font-semibold text-indigo-900 mb-4">Recent Activity</h3>
-              <div className="text-center py-8">
-                <div className="text-6xl mb-4">📊</div>
-                <p className="text-gray-600 text-lg">No recent activity</p>
-                <p className="text-gray-500 mt-2">Business activities will appear here</p>
-              </div>
+              <h3 className="text-2xl font-semibold text-indigo-900 mb-4">Recent Completed</h3>
+              {loading ? (
+                <div className="text-center py-8">
+                  <div className="text-6xl mb-4">⏳</div>
+                  <p className="text-gray-600 text-lg">Loading...</p>
+                </div>
+              ) : (
+                <>
+                  {bookings.filter(b => b.status === 'completed').slice(0, 5).length === 0 ? (
+                    <div className="text-center py-8">
+                      <div className="text-6xl mb-4">📊</div>
+                      <p className="text-gray-600 text-lg">No completed appointments</p>
+                      <p className="text-gray-500 mt-2">Completed appointments will appear here</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {bookings
+                        .filter(b => b.status === 'completed')
+                        .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+                        .slice(0, 5)
+                        .map((booking) => (
+                          <div key={booking._id} className="p-4 bg-gradient-to-r from-green-50 to-blue-50 rounded-lg border border-green-200 hover:shadow-md transition-shadow">
+                            <div className="flex justify-between items-start">
+                              <div className="flex-1">
+                                <h4 className="font-semibold text-gray-900">{booking.salonName}</h4>
+                                <p className="text-sm text-gray-600">{booking.customerName}</p>
+                                <p className="text-xs text-gray-500 mt-1">
+                                  {new Date(booking.date).toLocaleDateString()} at {booking.time}
+                                </p>
+                              </div>
+                              <div className="text-right">
+                                <p className="text-sm font-semibold text-green-700">
+                                  ${booking.totalAmount?.toFixed(2) || '0.00'}
+                                </p>
+                                <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">
+                                  ✓ Completed
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                    </div>
+                  )}
+                </>
+              )}
             </div>
 
             {/* Upcoming Appointments */}
             <div className="bg-white rounded-lg shadow-xl p-6 md:p-8">
               <h3 className="text-2xl font-semibold text-indigo-900 mb-4">Upcoming Appointments</h3>
-              <div className="text-center py-8">
-                <div className="text-6xl mb-4">📋</div>
-                <p className="text-gray-600 text-lg">No upcoming appointments</p>
-                <p className="text-gray-500 mt-2">Your scheduled appointments will appear here</p>
-              </div>
+              {loading ? (
+                <div className="text-center py-8">
+                  <div className="text-6xl mb-4">⏳</div>
+                  <p className="text-gray-600 text-lg">Loading...</p>
+                </div>
+              ) : (
+                <>
+                  {bookings.filter(b => {
+                    const bookingDate = new Date(b.date);
+                    const today = new Date();
+                    today.setHours(0, 0, 0, 0);
+                    return bookingDate >= today && (b.status === 'pending' || b.status === 'confirmed');
+                  }).slice(0, 5).length === 0 ? (
+                    <div className="text-center py-8">
+                      <div className="text-6xl mb-4">📋</div>
+                      <p className="text-gray-600 text-lg">No upcoming appointments</p>
+                      <p className="text-gray-500 mt-2">Scheduled appointments will appear here</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {bookings
+                        .filter(b => {
+                          const bookingDate = new Date(b.date);
+                          const today = new Date();
+                          today.setHours(0, 0, 0, 0);
+                          return bookingDate >= today && (b.status === 'pending' || b.status === 'confirmed');
+                        })
+                        .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+                        .slice(0, 5)
+                        .map((booking) => (
+                          <div key={booking._id} className="p-4 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg border border-blue-200 hover:shadow-md transition-shadow">
+                            <div className="flex justify-between items-start">
+                              <div className="flex-1">
+                                <h4 className="font-semibold text-gray-900">{booking.salonName}</h4>
+                                <p className="text-sm text-gray-600">{booking.customerName}</p>
+                                <p className="text-xs text-gray-500 mt-1">
+                                  {new Date(booking.date).toLocaleDateString()} at {booking.time}
+                                </p>
+                              </div>
+                              <div className="text-right">
+                                <p className="text-sm font-semibold text-purple-700">
+                                  ${booking.totalAmount?.toFixed(2) || '0.00'}
+                                </p>
+                                <span className={`text-xs px-2 py-1 rounded-full ${
+                                  booking.status === 'confirmed' 
+                                    ? 'bg-green-100 text-green-800' 
+                                    : 'bg-yellow-100 text-yellow-800'
+                                }`}>
+                                  {booking.status === 'confirmed' ? '✓ Confirmed' : '⏳ Pending'}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                    </div>
+                  )}
+                </>
+              )}
             </div>
           </div>
 
@@ -239,7 +393,7 @@ function OwnerDashboardPage() {
                 <span className="text-2xl">➕</span>
                 <span>Add New Salon</span>
               </Link>
-              <Link to="/view-appointments" className="bg-gradient-to-r from-green-600 to-green-700 text-white px-6 py-4 rounded-lg hover:from-green-700 hover:to-green-800 transition-all font-semibold flex items-center justify-center gap-2 shadow-lg hover:shadow-xl">
+              <Link to="/owner/appointments" className="bg-gradient-to-r from-green-600 to-green-700 text-white px-6 py-4 rounded-lg hover:from-green-700 hover:to-green-800 transition-all font-semibold flex items-center justify-center gap-2 shadow-lg hover:shadow-xl">
                 <span className="text-2xl">📅</span>
                 <span>View Appointments</span>
               </Link>
@@ -268,18 +422,30 @@ function OwnerDashboardPage() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div className="border-l-4 border-green-500 pl-4">
                 <p className="text-sm text-gray-600 mb-1">Completed Appointments</p>
-                <p className="text-3xl font-bold text-green-600">0</p>
+                <p className="text-3xl font-bold text-green-600">
+                  {loading ? '...' : bookings.filter(b => {
+                    const now = new Date();
+                    const bookingDate = new Date(b.date);
+                    return bookingDate.getMonth() === now.getMonth() && 
+                           bookingDate.getFullYear() === now.getFullYear() &&
+                           b.status === 'completed';
+                  }).length}
+                </p>
                 <p className="text-xs text-gray-500 mt-1">This month</p>
               </div>
               <div className="border-l-4 border-yellow-500 pl-4">
-                <p className="text-sm text-gray-600 mb-1">Average Rating</p>
-                <p className="text-3xl font-bold text-yellow-600">-</p>
-                <p className="text-xs text-gray-500 mt-1">Across all salons</p>
+                <p className="text-sm text-gray-600 mb-1">Pending Approvals</p>
+                <p className="text-3xl font-bold text-yellow-600">
+                  {loading ? '...' : bookings.filter(b => b.status === 'pending').length}
+                </p>
+                <p className="text-xs text-gray-500 mt-1">Awaiting confirmation</p>
               </div>
               <div className="border-l-4 border-blue-500 pl-4">
-                <p className="text-sm text-gray-600 mb-1">Customer Satisfaction</p>
-                <p className="text-3xl font-bold text-blue-600">-</p>
-                <p className="text-xs text-gray-500 mt-1">Overall feedback</p>
+                <p className="text-sm text-gray-600 mb-1">Total Bookings</p>
+                <p className="text-3xl font-bold text-blue-600">
+                  {loading ? '...' : bookings.length}
+                </p>
+                <p className="text-xs text-gray-500 mt-1">All time</p>
               </div>
             </div>
           </div>

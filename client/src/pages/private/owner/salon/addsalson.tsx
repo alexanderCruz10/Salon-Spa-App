@@ -10,6 +10,7 @@ const AddSalon = () => {
   const navigate = useNavigate()
   const [loading, setLoading] = useState(false)
   const [newService, setNewService] = useState('')
+  const [newServicePrice, setNewServicePrice] = useState('')
 
   const [formData, setFormData] = useState<SalonFormData>({
     name: '',
@@ -39,19 +40,21 @@ const AddSalon = () => {
   }
 
   const handleAddService = () => {
-    if (newService.trim() && !formData.services.includes(newService.trim())) {
+    if (newService.trim() && !formData.services.some(s => s.name === newService.trim())) {
+      const price = newServicePrice.trim() ? parseFloat(newServicePrice) : undefined;
       setFormData((prev) => ({
         ...prev,
-        services: [...prev.services, newService.trim()],
+        services: [...prev.services, { name: newService.trim(), price }],
       }))
       setNewService('')
+      setNewServicePrice('')
     }
   }
 
-  const handleRemoveService = (service: string) => {
+  const handleRemoveService = (serviceName: string) => {
     setFormData((prev) => ({
       ...prev,
-      services: prev.services.filter((s) => s !== service),
+      services: prev.services.filter((s) => s.name !== serviceName),
     }))
   }
 
@@ -280,34 +283,44 @@ const AddSalon = () => {
             <div className="bg-white rounded-lg shadow-xl p-6 md:p-8">
               <h2 className="text-2xl font-semibold text-indigo-900 mb-6">Services Offered *</h2>
               <div className="space-y-4">
-                <div className="flex gap-2">
+                <div className="flex gap-2 flex-col sm:flex-row">
                   <input
                     type="text"
                     value={newService}
                     onChange={(e) => setNewService(e.target.value)}
                     onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddService())}
                     className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                    placeholder="e.g., Haircut, Manicure, Massage"
+                    placeholder="Service name (e.g., Haircut, Manicure)"
+                  />
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    value={newServicePrice}
+                    onChange={(e) => setNewServicePrice(e.target.value)}
+                    onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddService())}
+                    className="w-full sm:w-32 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                    placeholder="Price ($)"
                   />
                   <button
                     type="button"
                     onClick={handleAddService}
-                    className="bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700 transition-colors font-semibold"
+                    className="bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700 transition-colors font-semibold whitespace-nowrap"
                   >
-                    Add
+                    Add Service
                   </button>
                 </div>
                 {formData.services.length > 0 && (
                   <div className="flex flex-wrap gap-2">
                     {formData.services.map((service) => (
                       <span
-                        key={service}
+                        key={service.name}
                         className="bg-indigo-100 text-indigo-800 px-4 py-2 rounded-full flex items-center gap-2"
                       >
-                        {service}
+                        {service.name}{service.price !== undefined && ` - $${service.price.toFixed(2)}`}
                         <button
                           type="button"
-                          onClick={() => handleRemoveService(service)}
+                          onClick={() => handleRemoveService(service.name)}
                           className="text-indigo-600 hover:text-indigo-800 font-bold"
                         >
                           ×

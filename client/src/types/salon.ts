@@ -10,6 +10,11 @@ export interface OpeningHours {
   sunday: { open: string; close: string; closed: boolean }
 }
 
+export interface Service {
+  name: string
+  price?: number
+}
+
 export interface SalonFormData {
   name: string
   description: string
@@ -20,7 +25,7 @@ export interface SalonFormData {
   phone: string
   email: string
   website: string
-  services: string[]
+  services: Service[]
   openingHours: OpeningHours
 }
 
@@ -31,6 +36,7 @@ export interface Salon extends SalonFormData {
   updatedAt: string
   rating?: number
   reviewCount?: number
+  isActive?: boolean
   location?: {
     type: string
     coordinates: [number, number] // [longitude, latitude]
@@ -47,7 +53,7 @@ export interface CreateSalonDTO {
   phone?: string
   email?: string
   website?: string
-  services: string[]
+  services: Service[]
   openingHours: OpeningHours
 }
 

@@ -3,23 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { salonAPI } from '@/lib/api';
 import toast from 'react-hot-toast';
 import UserNavBar from '@/components/UserNavBar';
-
-interface Salon {
-  _id: string;
-  name: string;
-  description: string;
-  address: string;
-  city: string;
-  province: string;
-  postalCode: string;
-  phone: string;
-  email: string;
-  website: string;
-  services: string[];
-  rating?: number;
-  reviewCount?: number;
-  isActive: boolean;
-}
+import type { Salon } from '@/types/salon';
 
 function SalonsPage() {
   const [searchCity, setSearchCity] = useState('');
@@ -202,7 +186,7 @@ function SalonsPage() {
                               key={idx}
                               className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-xs font-medium"
                             >
-                              {service}
+                              {typeof service === 'string' ? service : service.name}
                             </span>
                           ))}
                           {salon.services.length > 4 && (

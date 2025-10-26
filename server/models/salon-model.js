@@ -1,5 +1,17 @@
 const mongoose = require('mongoose');
 
+const serviceSchema = new mongoose.Schema({
+  name: {
+    type: String,
+    required: true,
+    trim: true
+  },
+  price: {
+    type: Number,
+    min: 0
+  }
+}, { _id: false });
+
 const openingHoursSchema = new mongoose.Schema({
   open: {
     type: String,
@@ -63,8 +75,7 @@ const salonSchema = new mongoose.Schema({
     trim: true
   },
   services: [{
-    type: String,
-    trim: true
+    type: serviceSchema
   }],
   openingHours: {
     monday: {

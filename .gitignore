@@ -80,3 +80,6 @@ data/
 # Misc
 .env.backup
 .vscode-test
+
+# Markdown files
+*.md

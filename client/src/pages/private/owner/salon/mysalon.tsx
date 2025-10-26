@@ -4,23 +4,7 @@ import { useNavigate, Link } from 'react-router-dom'
 import { salonAPI } from '@/lib/api'
 import toast from 'react-hot-toast'
 import OwnerNavBar from '@/components/OwnerNavBar'
-
-interface Salon {
-  _id: string
-  name: string
-  description: string
-  address: string
-  city: string
-  province: string
-  postalCode: string
-  phone: string
-  email: string
-  website: string
-  services: string[]
-  rating?: number
-  reviewCount?: number
-  isActive: boolean
-}
+import type { Salon } from '@/types/salon'
 
 function MySalon() {
   const navigate = useNavigate()
@@ -45,15 +29,32 @@ function MySalon() {
   }
 
   const handleDelete = async (id: string, name: string) => {
+    // eslint-disable-next-line no-restricted-globals
     if (!confirm(`Are you sure you want to delete "${name}"?`)) return
     
     try {
       await salonAPI.delete(id)
       toast.success('Salon deleted successfully!')
       fetchMySalons() // Refresh list
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error deleting salon:', error)
-      toast.error('Failed to delete salon')
+      const errorMessage = error?.message || error?.response?.data?.message || 'Failed to delete salon'
+      toast.error(errorMessage)
+    }
+  }
+
+  const handleReactivate = async (id: string, name: string) => {
+    // eslint-disable-next-line no-restricted-globals
+    if (!confirm(`Reactivate "${name}"?`)) return
+    
+    try {
+      await salonAPI.update(id, { isActive: true } as any)
+      toast.success('Salon reactivated successfully!')
+      fetchMySalons() // Refresh list
+    } catch (error: any) {
+      console.error('Error reactivating salon:', error)
+      const errorMessage = error?.message || error?.response?.data?.message || 'Failed to reactivate salon'
+      toast.error(errorMessage)
     }
   }
 
@@ -146,7 +147,7 @@ function MySalon() {
                               key={idx}
                               className="bg-indigo-100 text-indigo-800 px-3 py-1 rounded-full text-xs"
                             >
-                              {service}
+                              {typeof service === 'string' ? service : `${service.name}${service.price ? ` - $${service.price.toFixed(2)}` : ''}`}
                             </span>
                           ))}
                           {salon.services.length > 3 && (
@@ -179,12 +180,21 @@ function MySalon() {
                       >
                         Edit
                       </button>
-                      <button
-                        onClick={() => handleDelete(salon._id, salon.name)}
-                        className="flex-1 bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors font-semibold"
-                      >
-                        Delete
-                      </button>
+                      {salon.isActive ? (
+                        <button
+                          onClick={() => handleDelete(salon._id, salon.name)}
+                          className="flex-1 bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors font-semibold"
+                        >
+                          Delete
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => handleReactivate(salon._id, salon.name)}
+                          className="flex-1 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors font-semibold"
+                        >
+                          Reactivate
+                        </button>
+                      )}
                     </div>
                   </div>
                 </div>

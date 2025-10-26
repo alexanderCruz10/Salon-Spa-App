@@ -79,6 +79,16 @@ function UserNavBar() {
           </li>
           <li>
             <Link 
+              to="/my-bookings" 
+              className={`transition-colors px-3 py-2 inline-block ${
+                isActive('/my-bookings') ? 'font-semibold' : ''
+              } ${scrolled ? 'hover:text-green-300' : 'hover:text-green-700'}`}
+            >
+              My Bookings
+            </Link>
+          </li>
+          <li>
+            <Link 
               to="/about" 
               className={`transition-colors px-3 py-2 inline-block ${
                 isActive('/about') ? 'font-semibold' : ''
@@ -136,6 +146,17 @@ function UserNavBar() {
                 onClick={() => setMobileOpen(false)}
               >
                 Salons
+              </Link>
+            </li>
+            <li>
+              <Link 
+                to="/my-bookings" 
+                className={`block px-2 py-2 rounded ${
+                  isActive('/my-bookings') ? 'font-semibold' : ''
+                } ${scrolled ? 'hover:bg-green-600' : 'hover:bg-green-100'}`}
+                onClick={() => setMobileOpen(false)}
+              >
+                My Bookings
               </Link>
             </li>
             <li>

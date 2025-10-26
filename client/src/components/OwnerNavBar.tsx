@@ -77,6 +77,16 @@ function OwnerNavBar() {
           </li>
           <li>
             <Link 
+              to="/owner/appointments" 
+              className={`transition-colors px-3 py-2 inline-block ${
+                isActive('/owner/appointments') ? 'font-semibold' : ''
+              } ${scrolled ? 'hover:text-indigo-300' : 'hover:text-indigo-700'}`}
+            >
+              Appointments
+            </Link>
+          </li>
+          <li>
+            <Link 
               to="/addsalon" 
               className={`transition-colors px-3 py-2 inline-block ${
                 isActive('/addsalon') ? 'font-semibold' : ''
@@ -124,6 +134,17 @@ function OwnerNavBar() {
                 onClick={() => setMobileOpen(false)}
               >
                 My Salons
+              </Link>
+            </li>
+            <li>
+              <Link 
+                to="/owner/appointments" 
+                className={`block px-2 py-2 rounded ${
+                  isActive('/owner/appointments') ? 'font-semibold' : ''
+                } ${scrolled ? 'hover:bg-indigo-700' : 'hover:bg-indigo-200'}`}
+                onClick={() => setMobileOpen(false)}
+              >
+                Appointments
               </Link>
             </li>
             <li>
